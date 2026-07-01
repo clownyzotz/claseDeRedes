@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller de Redes // Nivel: Técnico Jr</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B1524;
+    --panel:#12213A;
+    --panel2:#17294D;
+    --line:#233858;
+    --orange:#FF7A33;
+    --green:#43D9A3;
+    --blue:#4FA8FF;
+    --brown:#C98A5B;
+    --purple:#9B7BFF;
+    --yellow:#F2C744;
+    --cream:#F4F1E8;
+    --muted:#8FA3C4;
+    --red:#FF5C6C;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 1px 1px, rgba(143,163,196,0.14) 1px, transparent 1px) 0 0/26px 26px,
+      linear-gradient(180deg,#0B1524 0%, #0A121F 100%);
+    color:var(--cream);
+    font-family:'Manrope', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{font-family:'Space Grotesk', sans-serif;}
+  .mono{font-family:'JetBrains Mono', monospace;}
+  a{color:inherit;}
+
+  /* ===== Topbar ===== */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:14px;
+    padding:12px 20px;
+    background:rgba(11,21,36,0.86);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.3px;}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--green); box-shadow:0 0 10px var(--green); animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  .rail{display:flex; align-items:center; gap:6px;}
+  .port{
+    width:26px;height:22px; border:2px solid var(--line); border-radius:4px 4px 2px 2px;
+    position:relative; background:var(--panel);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono'; font-size:10px; color:var(--muted);
+    transition:.3s;
+  }
+  .port::before{content:""; position:absolute; top:-4px; left:6px; width:4px; height:4px; background:var(--line); transition:.3s;}
+  .port.done{border-color:var(--green); color:var(--green); box-shadow:0 0 10px rgba(67,217,163,.5);}
+  .port.done::before{background:var(--green); box-shadow:0 0 6px var(--green);}
+  .port.now{border-color:var(--orange); color:var(--orange); box-shadow:0 0 10px rgba(255,122,51,.5);}
+
+  .score-chip{
+    display:flex; align-items:center; gap:8px;
+    background:var(--panel); border:1px solid var(--line); padding:6px 12px; border-radius:999px;
+    font-family:'JetBrains Mono'; font-size:13px;
+  }
+  #avatarMini{font-size:20px;}
+
+  /* ===== Layout ===== */
+  main{max-width:920px; margin:0 auto; padding:28px 18px 90px;}
+  .scene{display:none; animation:fadeUp .5s ease;}
+  .scene.active{display:block;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);}}
+
+  .eyebrow{
+    font-family:'JetBrains Mono'; font-size:12px; letter-spacing:2px; text-transform:uppercase;
+    color:var(--orange); margin-bottom:8px; display:flex; align-items:center; gap:8px;
+  }
+  .eyebrow::before{content:"▍"; color:var(--green);}
+  h1.title{font-size:clamp(26px,4vw,38px); margin:0 0 6px; line-height:1.1;}
+  p.lead{color:var(--muted); font-size:16px; max-width:640px; margin:0 0 26px;}
+
+  .card{
+    background:linear-gradient(180deg, var(--panel2), var(--panel));
+    border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px; margin-bottom:16px;
+  }
+
+  /* ===== Avatar picker ===== */
+  .toggle-group{display:flex; gap:10px; margin-bottom:20px;}
+  .toggle-btn{
+    flex:1; padding:14px; border-radius:14px; border:1px solid var(--line);
+    background:var(--panel); color:var(--cream); font-family:'Space Grotesk'; font-weight:600;
+    cursor:pointer; font-size:15px; transition:.2s;
+  }
+  .toggle-btn.sel{background:linear-gradient(135deg, rgba(255,122,51,.18), rgba(67,217,163,.12)); border-color:var(--orange); box-shadow:0 0 0 1px var(--orange) inset;}
+
+  .avatar-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); gap:12px; margin-bottom:22px;}
+  .avatar-opt{
+    aspect-ratio:1; border-radius:16px; border:2px solid var(--line); background:var(--panel);
+    display:flex; align-items:center; justify-content:center; font-size:34px; cursor:pointer; transition:.15s;
+  }
+  .avatar-opt:hover{transform:translateY(-3px); border-color:var(--blue);}
+  .avatar-opt.sel{border-color:var(--green); background:rgba(67,217,163,.12); box-shadow:0 0 14px rgba(67,217,163,.35);}
+
+  input[type=text]{
+    width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line);
+    background:var(--ink); color:var(--cream); font-family:'Manrope'; font-size:15px;
+  }
+  label.field-label{font-family:'JetBrains Mono'; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:8px;}
+
+  /* ===== Buttons ===== */
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:13px 22px; border-radius:12px; border:none; cursor:pointer;
+    font-family:'Space Grotesk'; font-weight:600; font-size:15px;
+    background:var(--orange); color:#12100C;
+    transition:.15s; box-shadow:0 4px 0 #B9541A;
+  }
+  .btn:active{transform:translateY(3px); box-shadow:0 1px 0 #B9541A;}
+  .btn.secondary{background:transparent; color:var(--cream); border:1px solid var(--line); box-shadow:none;}
+  .btn.secondary:active{transform:translateY(1px);}
+  .btn:disabled{opacity:.35; cursor:not-allowed; box-shadow:none;}
+  .btn-row{display:flex; justify-content:space-between; align-items:center; margin-top:18px; gap:10px; flex-wrap:wrap;}
+
+  /* ===== Quiz ===== */
+  .q-progress{font-family:'JetBrains Mono'; font-size:12px; color:var(--muted); margin-bottom:10px;}
+  .q-text{font-size:18px; font-weight:700; margin-bottom:16px; font-family:'Space Grotesk';}
+  .q-hint{color:var(--muted); font-size:14px; margin:-10px 0 16px;}
+  .options{display:grid; gap:10px;}
+  .opt{
+    text-align:left; padding:14px 16px; border-radius:12px; border:1px solid var(--line);
+    background:var(--panel); color:var(--cream); cursor:pointer; font-size:15px; font-family:'Manrope';
+    transition:.15s; display:flex; align-items:center; gap:10px;
+  }
+  .opt:hover{border-color:var(--blue);}
+  .opt.correct{border-color:var(--green); background:rgba(67,217,163,.14);}
+  .opt.wrong{border-color:var(--red); background:rgba(255,92,108,.14);}
+  .opt.disabled{pointer-events:none;}
+  .feedback{margin-top:14px; padding:14px 16px; border-radius:12px; font-size:14.5px; display:none;}
+  .feedback.ok{display:block; background:rgba(67,217,163,.12); border:1px solid var(--green);}
+  .feedback.bad{display:block; background:rgba(255,92,108,.12); border:1px solid var(--red);}
+
+  /* ===== RJ45 workshop ===== */
+  .rj45-wrap{display:grid; grid-template-columns:1fr; gap:20px;}
+  @media(min-width:720px){.rj45-wrap{grid-template-columns:1.1fr .9fr;}}
+  .connector{
+    background:#0E1A2E; border:1px solid var(--line); border-radius:14px; padding:20px;
+  }
+  .plug{
+    width:100%; max-width:340px; margin:0 auto;
+    background:linear-gradient(180deg,#DCE3EA,#B9C3CE);
+    border-radius:10px 10px 4px 4px; padding:14px 14px 20px;
+    position:relative;
+  }
+  .plug::after{content:"CAT5e/6"; position:absolute; bottom:4px; right:10px; font-family:'JetBrains Mono'; font-size:9px; color:#5a6472;}
+  .pins{display:flex; gap:4px; justify-content:center;}
+  .pin-slot{
+    flex:1; height:70px; border-radius:3px; background:#8b95a1; border:2px dashed #5a6472;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:6px;
+    cursor:pointer; position:relative; transition:.15s;
+  }
+  .pin-slot span.num{position:absolute; top:4px; font-family:'JetBrains Mono'; font-size:10px; color:#3b4149; font-weight:600;}
+  .pin-slot.filled{border-style:solid;}
+  .pin-slot.ok{border-color:var(--green); box-shadow:0 0 8px rgba(67,217,163,.6);}
+  .pin-slot.bad{border-color:var(--red); box-shadow:0 0 8px rgba(255,92,108,.6);}
+  .wire{width:70%; height:52px; border-radius:2px;}
+
+  .wire-pool{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:20px;}
+  .chip{
+    padding:9px 12px; border-radius:8px; cursor:pointer; font-family:'JetBrains Mono'; font-size:12px;
+    display:flex; align-items:center; gap:8px; border:2px solid transparent; color:#12100C; font-weight:600;
+    background:#eee; transition:.15s;
+  }
+  .chip.sel{outline:3px solid var(--blue); transform:translateY(-2px);}
+  .chip.used{opacity:.25; pointer-events:none;}
+  .chip .swatch{width:16px; height:16px; border-radius:3px; display:block;}
+
+  .standard-toggle{display:flex; gap:8px; margin-bottom:16px;}
+  .standard-toggle button{flex:1; padding:10px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--cream); font-family:'Space Grotesk'; font-weight:600; cursor:pointer;}
+  .standard-toggle button.sel{background:var(--orange); color:#12100C; border-color:var(--orange);}
+
+  .ab-table{width:100%; border-collapse:collapse; font-size:14px; margin-top:6px;}
+  .ab-table th,.ab-table td{padding:8px 10px; border-bottom:1px solid var(--line); text-align:center;}
+  .ab-table th{font-family:'JetBrains Mono'; font-size:11px; color:var(--muted); text-transform:uppercase;}
+  .ab-swatch{width:14px;height:14px;border-radius:3px; display:inline-block; margin-right:6px; vertical-align:middle;}
+
+  .compare-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:16px 0;}
+  @media(max-width:560px){.compare-grid{grid-template-columns:1fr;}}
+  .compare-card{border-radius:14px; padding:16px; border:1px solid var(--line);}
+  .compare-card.a{background:rgba(67,217,163,.08); border-color:var(--green);}
+  .compare-card.b{background:rgba(255,122,51,.08); border-color:var(--orange);}
+
+  .badge{
+    display:inline-flex; align-items:center; gap:10px; padding:14px 20px; border-radius:14px;
+    background:linear-gradient(135deg, rgba(255,122,51,.2), rgba(67,217,163,.15));
+    border:1px solid var(--orange); font-family:'Space Grotesk'; font-weight:700; font-size:18px;
+  }
+  .confetti{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:60;}
+  .confetti span{
+    position:absolute; top:-20px; width:8px; height:14px; opacity:.9;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{to{transform:translateY(110vh) rotate(360deg); opacity:0;}}
+
+  .lock-note{color:var(--muted); font-size:14px; text-align:center; margin-top:30px;}
+
+  /* ===== OSI stack ===== */
+  .osi-item{border-radius:12px; border:1px solid var(--line); margin-bottom:8px; overflow:hidden; cursor:pointer; background:var(--panel); transition:.2s;}
+  .osi-item.open{border-color:var(--blue);}
+  .osi-header{display:flex; align-items:center; gap:12px; padding:14px 16px;}
+  .osi-header .num{width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono'; font-size:13px; flex-shrink:0; color:#12100C; font-weight:700;}
+  .osi-header .name{font-family:'Space Grotesk'; font-weight:700; font-size:15.5px; flex:1;}
+  .osi-header .chev{color:var(--muted); transition:.25s; font-size:13px;}
+  .osi-item.open .chev{transform:rotate(180deg);}
+  .osi-desc{max-height:0; overflow:hidden; transition:max-height .3s ease; font-size:14px; color:var(--muted); padding:0 16px 0 58px;}
+  .osi-item.open .osi-desc{max-height:220px; padding:0 16px 16px 58px;}
+  ::selection{background:var(--orange); color:#12100C;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="dot"></span> TALLER DE REDES</div>
+  <div class="rail" id="rail"></div>
+  <div class="score-chip"><span id="avatarMini">🙂</span><span class="mono" id="scoreLabel">0 pts</span></div>
+</div>
+
+<main>
+
+  <!-- SCENE 0: AVATAR -->
+  <section class="scene active" id="scene-0">
+    <div class="eyebrow">Estación 0 · Identifícate</div>
+    <h1 class="title">Bienvenido al Taller de Redes</h1>
+    <p class="lead">Antes de conectar tu primer cable, crea tu perfil de técnico. Vas a aprender sobre dispositivos, tipos de red, el modelo OSI, y vas a armar un conector RJ45 con tus propias manos (virtuales).</p>
+
+    <div class="card">
+      <label class="field-label">Paso 1 · Elige tu avatar</label>
+      <div class="toggle-group">
+        <button class="toggle-btn sel" id="btnHumano" onclick="setAvatarType('humano')">🧑 Personaje</button>
+        <button class="toggle-btn" id="btnAnimal" onclick="setAvatarType('animal')">🦊 Animal</button>
+      </div>
+      <div class="avatar-grid" id="avatarGrid"></div>
+
+      <label class="field-label">Paso 2 · ¿Cómo te llamamos?</label>
+      <input type="text" id="nameInput" placeholder="Tu nombre o apodo de técnico" maxlength="20">
+
+      <div class="btn-row">
+        <span class="q-hint" id="avatarWarn"></span>
+        <button class="btn" onclick="finishAvatar()">Comenzar el taller →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCENE 1: DISPOSITIVOS -->
+  <section class="scene" id="scene-1">
+    <div class="eyebrow">Nivel 1 · Dispositivos de red</div>
+    <h1 class="title">¿Quién hace qué en la red?</h1>
+    <p class="lead">Lee la pista y adivina qué dispositivo se describe. Cada red combina varios de estos para funcionar.</p>
+    <div class="card" id="devicesCard"></div>
+  </section>
+
+  <!-- SCENE 2: TIPOS DE RED -->
+  <section class="scene" id="scene-2">
+    <div class="eyebrow">Nivel 2 · Tipos de redes</div>
+    <h1 class="title">¿Qué tan grande es la red?</h1>
+    <p class="lead">Las redes se clasifican por su alcance. Identifica el tipo correcto según el escenario.</p>
+    <div class="card" id="typesCard"></div>
+  </section>
+
+  <!-- SCENE 3: OSI -->
+  <section class="scene" id="scene-3">
+    <div class="eyebrow">Nivel 3 · Modelo OSI</div>
+    <h1 class="title">Las 7 capas que hacen viajar tus datos</h1>
+    <p class="lead">Toca cada capa para ver qué hace, de la más cercana a tus programas (7) hasta los cables y señales puras (1).</p>
+    <div class="card">
+      <div id="osiStack"></div>
+    </div>
+    <div class="card" id="osiCard"></div>
+  </section>
+
+  <!-- SCENE 4: RJ45 -->
+  <section class="scene" id="scene-4">
+    <div class="eyebrow">Nivel 4 · Taller práctico</div>
+    <h1 class="title">Arma tu conector RJ45</h1>
+    <p class="lead">Elige un estándar, luego coloca cada hilo en el pin correcto (1 al 8) mirando la punta del conector con el broche hacia abajo.</p>
+
+    <div class="standard-toggle">
+      <button id="stdA" class="sel" onclick="setStandard('A')">T568A</button>
+      <button id="stdB" onclick="setStandard('B')">T568B</button>
+    </div>
+
+    <div class="rj45-wrap">
+      <div class="connector">
+        <div class="plug">
+          <div class="pins" id="pinSlots"></div>
+        </div>
+        <div class="wire-pool" id="wirePool"></div>
+        <div class="btn-row">
+          <button class="btn secondary" onclick="resetRJ45()">↺ Reiniciar</button>
+          <button class="btn" onclick="crimpCheck()">🔧 Crimpar y verificar</button>
+        </div>
+        <div class="feedback" id="rj45Feedback"></div>
+      </div>
+      <div class="card" style="margin:0;">
+        <h3 style="margin-top:0;">📌 Dato técnico</h3>
+        <p style="color:var(--muted); font-size:14.5px;">Los pines 1-2 transmiten y los pines 3-6 reciben en Ethernet 10/100 Mbps. El orden de colores no es decorativo: si te equivocas, el cable puede no funcionar o generar interferencia (diafonía) entre pares.</p>
+        <p style="color:var(--muted); font-size:14.5px;">Los pares van trenzados (torcidos entre sí) porque eso cancela el ruido eléctrico entre cables vecinos.</p>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <span></span>
+      <button class="btn" id="rj45Next" onclick="goScene(5)" disabled>Siguiente nivel →</button>
+    </div>
+  </section>
+
+  <!-- SCENE 5: A vs B -->
+  <section class="scene" id="scene-5">
+    <div class="eyebrow">Nivel 5 · T568A vs T568B</div>
+    <h1 class="title">¿Cuál es la diferencia y por qué importa?</h1>
+    <p class="lead">Ambos estándares usan los mismos 4 pares de cables, solo cambian de posición el par naranja y el par verde. Lo importante es no mezclarlos sin razón.</p>
+
+    <div class="compare-grid">
+      <div class="compare-card a">
+        <h3 style="margin-top:0; color:var(--green);">T568A</h3>
+        <p style="font-size:14px; color:var(--muted);">Estándar preferido en instalaciones residenciales y requerido en algunos contratos gubernamentales (EE.UU.). Compatible con el viejo estándar telefónico USOC, lo que facilitó su transición.</p>
+      </div>
+      <div class="compare-card b">
+        <h3 style="margin-top:0; color:var(--orange);">T568B</h3>
+        <p style="font-size:14px; color:var(--muted);">El más usado en oficinas y cableado comercial en la práctica. Proviene del antiguo estándar de AT&T (258A). Es el que verás con más frecuencia en el mundo real.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <table class="ab-table">
+        <tr><th>Pin</th><th>T568A</th><th>T568B</th><th>Función</th></tr>
+        <tr><td>1</td><td><span class="ab-swatch" style="background:linear-gradient(90deg,#43D9A3 50%,#fff 50%)"></span>Bl/Verde</td><td><span class="ab-swatch" style="background:linear-gradient(90deg,#FF7A33 50%,#fff 50%)"></span>Bl/Naranja</td><td>TX+</td></tr>
+        <tr><td>2</td><td><span class="ab-swatch" style="background:#43D9A3"></span>Verde</td><td><span class="ab-swatch" style="background:#FF7A33"></span>Naranja</td><td>TX-</td></tr>
+        <tr><td>3</td><td><span class="ab-swatch" style="background:linear-gradient(90deg,#FF7A33 50%,#fff 50%)"></span>Bl/Naranja</td><td><span class="ab-swatch" style="background:linear-gradient(90deg,#43D9A3 50%,#fff 50%)"></span>Bl/Verde</td><td>RX+</td></tr>
+        <tr><td>4</td><td><span class="ab-swatch" style="background:#4FA8FF"></span>Azul</td><td><span class="ab-swatch" style="background:#4FA8FF"></span>Azul</td><td>—</td></tr>
+        <tr><td>5</td><td><span class="ab-swatch" style="background:linear-gradient(90deg,#4FA8FF 50%,#fff 50%)"></span>Bl/Azul</td><td><span class="ab-swatch" style="background:linear-gradient(90deg,#4FA8FF 50%,#fff 50%)"></span>Bl/Azul</td><td>—</td></tr>
+        <tr><td>6</td><td><span class="ab-swatch" style="background:#FF7A33"></span>Naranja</td><td><span class="ab-swatch" style="background:#43D9A3"></span>Verde</td><td>RX-</td></tr>
+        <tr><td>7</td><td><span class="ab-swatch" style="background:linear-gradient(90deg,#C98A5B 50%,#fff 50%)"></span>Bl/Café</td><td><span class="ab-swatch" style="background:linear-gradient(90deg,#C98A5B 50%,#fff 50%)"></span>Bl/Café</td><td>—</td></tr>
+        <tr><td>8</td><td><span class="ab-swatch" style="background:#C98A5B"></span>Café</td><td><span class="ab-swatch" style="background:#C98A5B"></span>Café</td><td>—</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">🔀 Cable directo vs. cable cruzado</h3>
+      <p style="color:var(--muted); font-size:14.5px;">
+      <b style="color:var(--cream);">Cable directo (Straight-through):</b> usa el mismo estándar en ambos extremos (A-A o B-B). Se usa para conectar dispositivos de <i>distinto</i> tipo, como una PC a un switch.<br><br>
+      <b style="color:var(--cream);">Cable cruzado (Crossover):</b> usa T568A en un extremo y T568B en el otro. Se usaba para conectar dispositivos del <i>mismo</i> tipo, como PC-PC o switch-switch. Hoy casi no se necesita porque las tarjetas de red modernas tienen <span class="mono">Auto-MDI-X</span>, que detecta y ajusta esto automáticamente.</p>
+    </div>
+
+    <div class="card" id="abCard"></div>
+  </section>
+
+  <!-- SCENE 6: FINAL -->
+  <section class="scene" id="scene-6">
+    <div class="eyebrow">Estación final</div>
+    <h1 class="title" id="finalTitle">¡Taller completado!</h1>
+    <div class="card" style="text-align:center;">
+      <div style="font-size:64px;" id="finalAvatar">🎉</div>
+      <p id="finalName" style="font-size:20px; font-weight:700; margin:4px 0 18px;"></p>
+      <p class="mono" id="finalScore" style="font-size:16px; color:var(--muted); margin-bottom:18px;"></p>
+      <div class="badge" id="finalBadge">Técnico en entrenamiento</div>
+      <div class="btn-row" style="justify-content:center; margin-top:26px;">
+        <button class="btn" onclick="restartAll()">↺ Reiniciar taller</button>
+      </div>
+    </div>
+    <p class="lock-note">Repasa cualquier nivel usando los puertos de arriba una vez completado el taller.</p>
+  </section>
+
+</main>
+
+<script>
+/* ===================== STATE ===================== */
+const state = {
+  avatarType:'humano', avatar:'🧑', name:'', scene:0, score:0, maxScore:0,
+  standard:'A', placedWires:{}, rj45Done:false
+};
+
+const AVATARS = {
+  humano:['🧑','👦','👧','🧔','👩','🧑‍🦱','👨‍🦳','🧑‍🎓','👨‍💻','👩‍💻','🧕','👨‍🦲','👩‍🦰','🧓','🤠','🥷','🧑‍🚀','🦸','🧙','🧑‍🔧','🕵️','👨‍🚀','🧑‍🎤','👨‍🏫'],
+  animal:['🦊','🐱','🦉','🐧','🐼','🦁','🐺','🐨','🐶','🐰','🐵','🐯','🐸','🐙','🦄','🦖','🐢','🦈','🐹','🦝','🐻','🦔','🐝','🦋']
+};
+
+/* ===================== DATA: DEVICES ===================== */
+const devices = [
+  {clue:"Conecta dos o más redes diferentes y decide el mejor camino para que los datos lleguen a internet.", answer:"Router", options:["Router","Switch","Hub","Firewall"], explain:"El router dirige tráfico entre redes distintas, por ejemplo tu red de casa e internet."},
+  {clue:"Conecta varios dispositivos dentro de la misma red local y envía cada paquete solo al puerto correcto usando direcciones MAC.", answer:"Switch", options:["Módem","Switch","Servidor","Access Point"], explain:"El switch es 'inteligente': aprende qué dispositivo está en cada puerto para no saturar la red."},
+  {clue:"Dispositivo antiguo que repite la señal a TODOS sus puertos, sin importar a quién va dirigida.", answer:"Hub", options:["Hub","Router","Firewall","Cliente"], explain:"El hub no es inteligente: genera más tráfico innecesario. Por eso casi no se usa hoy."},
+  {clue:"Permite que los dispositivos se conecten a la red local usando WiFi en lugar de cable.", answer:"Access Point", options:["Servidor","Access Point","Módem","Switch"], explain:"El Access Point (punto de acceso) transforma la red cableada en una señal inalámbrica."},
+  {clue:"Convierte la señal que llega de tu proveedor de internet (fibra, cable o teléfono) en una señal que tu red pueda usar.", answer:"Módem", options:["Módem","Firewall","Router","Hub"], explain:"El módem 'traduce' la señal externa del ISP; muchas veces viene combinado con un router."},
+  {clue:"Filtra el tráfico entrante y saliente para bloquear accesos no autorizados a la red.", answer:"Firewall", options:["Firewall","Cliente","Servidor","Access Point"], explain:"El firewall actúa como guardia de seguridad de la red, permitiendo o bloqueando tráfico según reglas."},
+  {clue:"Ofrece recursos como páginas web, archivos o correo para que otros dispositivos los usen.", answer:"Servidor", options:["Servidor","Cliente","Switch","Módem"], explain:"El servidor 'sirve' contenido o servicios; los demás equipos actúan como clientes que los consumen."},
+  {clue:"Es cualquier dispositivo final que consume los servicios de la red, como tu laptop o tu celular.", answer:"Cliente", options:["Cliente","Servidor","Firewall","Hub"], explain:"El cliente pide y recibe información (páginas web, archivos, correo) que ofrecen los servidores."},
+  {clue:"Amplifica una señal débil para que la red WiFi o el cableado alcance zonas más lejanas.", answer:"Repetidor", options:["Repetidor","Firewall","Switch","Servidor"], explain:"El repetidor extiende el alcance de la señal sin analizar ni filtrar el tráfico."},
+];
+
+/* ===================== DATA: TYPES ===================== */
+const types = [
+  {clue:"La red que conecta tu computadora, celular y smart TV dentro de tu casa.", answer:"LAN", options:["LAN","WAN","MAN","PAN"], explain:"LAN = Red de Área Local: cubre un espacio pequeño como una casa u oficina."},
+  {clue:"La red que conecta computadoras de Guatemala con servidores en Japón: internet en su forma más grande.", answer:"WAN", options:["PAN","WAN","LAN","WLAN"], explain:"WAN = Red de Área Amplia: conecta redes LAN entre ciudades o países."},
+  {clue:"La conexión Bluetooth entre tu celular y tus audífonos inalámbricos.", answer:"PAN", options:["MAN","LAN","PAN","WAN"], explain:"PAN = Red de Área Personal: alcance muy corto, pensada para tus propios dispositivos."},
+  {clue:"Una red que cubre toda una ciudad, como las cámaras de tránsito municipales conectadas entre sí.", answer:"MAN", options:["MAN","WAN","LAN","WLAN"], explain:"MAN = Red de Área Metropolitana: más grande que una LAN, más pequeña que una WAN."},
+  {clue:"La red WiFi del laboratorio de computación de tu instituto.", answer:"WLAN", options:["WLAN","WAN","PAN","MAN"], explain:"WLAN = LAN inalámbrica: mismo alcance que una LAN, pero sin cables."},
+  {clue:"La red interna de un banco que conecta todas sus sucursales en distintos departamentos de Guatemala.", answer:"WAN", options:["WAN","LAN","PAN","MAN"], explain:"Aunque es una red privada de la empresa, cubre una gran distancia geográfica, así que sigue siendo una WAN."},
+  {clue:"El router de tu casa conectado por cable únicamente a tu computadora de escritorio, sin usar WiFi.", answer:"LAN", options:["LAN","WLAN","WAN","PAN"], explain:"Sigue siendo una red de área local; solo deja de ser 'inalámbrica' porque usa cable en vez de WiFi."},
+];
+
+/* ===================== DATA: A vs B QUIZ ===================== */
+const abQuiz = [
+  {clue:"Quieres conectar tu laptop directamente al puerto de un switch en el laboratorio. ¿Qué tipo de cable usas?", answer:"Cable directo (mismo estándar en ambos extremos)", options:["Cable directo (mismo estándar en ambos extremos)","Cable cruzado (A en un extremo, B en el otro)","No se puede conectar con cable"], explain:"PC y switch son dispositivos distintos, así que se usa cable directo (por ejemplo B-B)."},
+  {clue:"En un cable T568A, ¿qué par de colores ocupa el pin 1 y el pin 2?", answer:"Blanco/Verde y Verde", options:["Blanco/Verde y Verde","Blanco/Naranja y Naranja","Azul y Blanco/Azul"], explain:"En T568A, el par verde va en los pines 1-2; en T568B ese lugar lo ocupa el par naranja."},
+  {clue:"¿Qué pares NO cambian de posición entre T568A y T568B?", answer:"Azul y Café", options:["Naranja y Verde","Azul y Café","Verde y Café","Naranja y Azul"], explain:"Los pares azul (pines 4-5) y café (pines 7-8) se mantienen igual en ambos estándares; solo naranja y verde se intercambian."},
+  {clue:"¿Por qué hoy casi no necesitas armar cables cruzados aunque conectes dos switches entre sí?", answer:"Porque los equipos modernos tienen Auto-MDI-X y se autoajustan", options:["Porque los equipos modernos tienen Auto-MDI-X y se autoajustan","Porque los switches ya no usan RJ45","Porque el cable cruzado fue prohibido"], explain:"Auto-MDI-X detecta automáticamente el tipo de conexión y ajusta los pines por software."},
+  {clue:"Si armas un extremo del cable en T568A y el otro en T568B por error, ¿qué obtienes sin querer?", answer:"Un cable cruzado", options:["Un cable directo","Un cable cruzado","Un cable roto que nunca funciona"], explain:"Mezclar A y B en cada extremo es exactamente la definición de un cable cruzado (a propósito o por error)."},
+  {clue:"¿Qué organismo define el estándar TIA/EIA-568 que incluye las variantes A y B?", answer:"TIA/EIA (industria de telecomunicaciones)", options:["TIA/EIA (industria de telecomunicaciones)","IEEE 802.3","La ISO exclusivamente"], explain:"TIA/EIA-568 es el estándar de cableado estructurado que define ambas variantes para mantener consistencia entre instalaciones."},
+  {clue:"Si compras un cable de red ya armado en una tienda, lo más probable es que use...", answer:"T568B", options:["T568B","T568A","Una mezcla de ambos siempre","Ninguno de los dos"], explain:"La mayoría de cables comerciales prefabricados usan T568B, por ser el más común en el mercado."},
+];
+
+/* ===================== DATA: OSI ===================== */
+const osiLayers = [
+  {n:7, name:'Aplicación', color:'var(--green)', desc:'Es la capa que usan tus programas directamente: navegador, WhatsApp, correo. Protocolos típicos: HTTP, HTTPS, FTP, SMTP, DNS.'},
+  {n:6, name:'Presentación', color:'var(--blue)', desc:'Traduce, cifra y comprime los datos para que la aplicación los entienda: formatos de imagen/video y cifrado como SSL/TLS.'},
+  {n:5, name:'Sesión', color:'var(--orange)', desc:'Abre, mantiene y cierra la conexión entre dos dispositivos mientras dura la comunicación, como una videollamada.'},
+  {n:4, name:'Transporte', color:'var(--brown)', desc:'Divide los datos en segmentos y controla que lleguen completos y en orden. Protocolos: TCP (confiable) y UDP (rápido, sin garantías).'},
+  {n:3, name:'Red', color:'var(--purple)', desc:'Determina la mejor ruta entre redes distintas usando direcciones IP. Aquí trabaja principalmente el router.'},
+  {n:2, name:'Enlace de datos', color:'var(--yellow)', desc:'Organiza los bits en tramas (frames) y usa direcciones MAC dentro de la misma red local. Aquí trabaja el switch.'},
+  {n:1, name:'Física', color:'var(--red)', desc:'Son los bits (0 y 1) viajando como señales eléctricas, luz o radiofrecuencia por cables de cobre, fibra óptica o WiFi.'},
+];
+
+const osiQuiz = [
+  {clue:"¿En qué capa trabaja principalmente un switch, usando direcciones MAC?", answer:"Capa 2 - Enlace de datos", options:["Capa 2 - Enlace de datos","Capa 3 - Red","Capa 1 - Física","Capa 4 - Transporte"], explain:"El switch mueve tramas dentro de la misma red local basándose en direcciones MAC, típico de la capa 2."},
+  {clue:"¿En qué capa trabaja principalmente un router, usando direcciones IP para elegir la mejor ruta?", answer:"Capa 3 - Red", options:["Capa 3 - Red","Capa 2 - Enlace de datos","Capa 5 - Sesión","Capa 7 - Aplicación"], explain:"El router decide por dónde enviar los paquetes entre redes distintas usando direcciones IP, propio de la capa 3."},
+  {clue:"¿Qué capa se encarga de dividir los datos en segmentos y controlar que lleguen completos, usando protocolos como TCP?", answer:"Capa 4 - Transporte", options:["Capa 4 - Transporte","Capa 1 - Física","Capa 6 - Presentación","Capa 3 - Red"], explain:"TCP y UDP viven en la capa de transporte, encargada de la entrega confiable (o rápida) de los datos."},
+  {clue:"Cuando abres tu navegador y escribes una dirección web, ¿en qué capa está funcionando esa aplicación?", answer:"Capa 7 - Aplicación", options:["Capa 7 - Aplicación","Capa 1 - Física","Capa 2 - Enlace de datos","Capa 4 - Transporte"], explain:"El navegador, junto al protocolo HTTP/HTTPS, opera en la capa más cercana al usuario: la capa 7."},
+  {clue:"Los cables de cobre, la fibra óptica y las señales de radiofrecuencia puras pertenecen a...", answer:"Capa 1 - Física", options:["Capa 1 - Física","Capa 2 - Enlace de datos","Capa 3 - Red","Capa 5 - Sesión"], explain:"La capa física se encarga solamente de transmitir bits como señales eléctricas, luz o radiofrecuencia."},
+  {clue:"El cifrado (SSL/TLS) y la traducción de formatos de datos ocurren principalmente en...", answer:"Capa 6 - Presentación", options:["Capa 6 - Presentación","Capa 4 - Transporte","Capa 2 - Enlace de datos","Capa 7 - Aplicación"], explain:"La capa de presentación adapta el formato y puede cifrar los datos antes de entregarlos a la aplicación."},
+];
+
+/* ===================== RJ45 WIRE DEFINITIONS ===================== */
+const wireDefs = {
+  wg:{label:'Bl/Verde', css:'linear-gradient(90deg,#43D9A3 0 50%, #fff 50% 100%)'},
+  g :{label:'Verde',    css:'#43D9A3'},
+  wo:{label:'Bl/Naranja', css:'linear-gradient(90deg,#FF7A33 0 50%, #fff 50% 100%)'},
+  o :{label:'Naranja',  css:'#FF7A33'},
+  bl:{label:'Azul',     css:'#4FA8FF'},
+  wbl:{label:'Bl/Azul', css:'linear-gradient(90deg,#4FA8FF 0 50%, #fff 50% 100%)'},
+  wbr:{label:'Bl/Café', css:'linear-gradient(90deg,#C98A5B 0 50%, #fff 50% 100%)'},
+  br:{label:'Café',     css:'#C98A5B'}
+};
+const orderA = ['wg','g','wo','bl','wbl','o','wbr','br'];
+const orderB = ['wo','o','wg','bl','wbl','g','wbr','br'];
+
+/* ===================== INIT ===================== */
+function renderAvatarGrid(){
+  const grid = document.getElementById('avatarGrid');
+  grid.innerHTML = '';
+  AVATARS[state.avatarType].forEach(em=>{
+    const d = document.createElement('div');
+    d.className = 'avatar-opt' + (em===state.avatar?' sel':'');
+    d.textContent = em;
+    d.onclick = ()=>{ state.avatar = em; renderAvatarGrid(); };
+    grid.appendChild(d);
+  });
+}
+function setAvatarType(t){
+  state.avatarType = t;
+  state.avatar = AVATARS[t][0];
+  document.getElementById('btnHumano').classList.toggle('sel', t==='humano');
+  document.getElementById('btnAnimal').classList.toggle('sel', t==='animal');
+  renderAvatarGrid();
+}
+function finishAvatar(){
+  const nm = document.getElementById('nameInput').value.trim();
+  if(!nm){ document.getElementById('avatarWarn').textContent = 'Escribe tu nombre para continuar 👆'; return; }
+  state.name = nm;
+  document.getElementById('avatarMini').textContent = state.avatar;
+  goScene(1);
+}
+
+/* ===================== OSI STACK ===================== */
+function renderOsiStack(){
+  const wrap = document.getElementById('osiStack');
+  wrap.innerHTML = '';
+  osiLayers.forEach(layer=>{
+    const item = document.createElement('div');
+    item.className = 'osi-item';
+    item.innerHTML = `
+      <div class="osi-header">
+        <span class="num" style="background:${layer.color}">${layer.n}</span>
+        <span class="name">Capa ${layer.n} · ${layer.name}</span>
+        <span class="chev">▼</span>
+      </div>
+      <div class="osi-desc">${layer.desc}</div>
+    `;
+    item.onclick = ()=> item.classList.toggle('open');
+    wrap.appendChild(item);
+  });
+}
+
+/* ===================== NAV / PROGRESS ===================== */
+const sceneNames = ['Perfil','Dispositivos','Tipos de red','Modelo OSI','RJ45','A vs B','Final'];
+function buildRail(){
+  const rail = document.getElementById('rail');
+  rail.innerHTML = '';
+  for(let i=0;i<7;i++){
+    const p = document.createElement('div');
+    p.className = 'port';
+    p.title = sceneNames[i];
+    p.textContent = i;
+    p.onclick = ()=>{ if(i<=maxUnlocked()) goScene(i); };
+    rail.appendChild(p);
+  }
+  updateRail();
+}
+function maxUnlocked(){
+  // can revisit any completed scene or current
+  return Math.max(state.scene, state._maxReached||0);
+}
+function updateRail(){
+  const ports = document.querySelectorAll('.port');
+  ports.forEach((p,i)=>{
+    p.classList.toggle('now', i===state.scene);
+    p.classList.toggle('done', i < (state._maxReached||0) || (i===6 && state.scene===6));
+  });
+}
+function goScene(i){
+  state.scene = i;
+  state._maxReached = Math.max(state._maxReached||0, i);
+  document.querySelectorAll('.scene').forEach(s=>s.classList.remove('active'));
+  document.getElementById('scene-'+i).classList.add('active');
+  updateRail();
+  window.scrollTo({top:0, behavior:'smooth'});
+  if(i===5) renderAB();
+  if(i===6) renderFinal();
+}
+function updateScore(delta){
+  state.score += delta;
+  document.getElementById('scoreLabel').textContent = state.score + ' pts';
+}
+
+/* ===================== GENERIC QUIZ RENDERER ===================== */
+function renderQuiz(containerId, dataset, nextSceneIndex, tag){
+  const container = document.getElementById(containerId);
+  let idx = 0;
+  let localScore = 0;
+  function shuffle(arr){ return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]); }
+
+  function render(){
+    if(idx >= dataset.length){
+      container.innerHTML = `
+        <div style="text-align:center; padding:10px 0;">
+          <h3 style="margin-top:0;">✅ Nivel completo</h3>
+          <p class="mono" style="color:var(--muted);">Resultado: ${localScore}/${dataset.length} correctas</p>
+          <button class="btn" onclick="goScene(${nextSceneIndex})">Continuar →</button>
+        </div>`;
+      return;
+    }
+    const q = dataset[idx];
+    const opts = shuffle(q.options);
+    container.innerHTML = `
+      <div class="q-progress">${tag} ${idx+1} / ${dataset.length}</div>
+      <div class="q-text">${q.clue}</div>
+      <div class="options" id="optsWrap"></div>
+      <div class="feedback" id="fb"></div>
+      <div class="btn-row"><span></span><button class="btn" id="nextBtn" style="display:none">Siguiente →</button></div>
+    `;
+    container.querySelector('#nextBtn').onclick = ()=>{ idx++; render(); };
+    const wrap = container.querySelector('#optsWrap');
+    opts.forEach(op=>{
+      const b = document.createElement('button');
+      b.className = 'opt';
+      b.textContent = op;
+      b.onclick = ()=>{
+        container.querySelectorAll('#optsWrap .opt').forEach(o=>o.classList.add('disabled'));
+        const fb = container.querySelector('#fb');
+        if(op === q.answer){
+          b.classList.add('correct');
+          localScore++;
+          updateScore(1);
+          fb.className = 'feedback ok';
+          fb.textContent = '✔ ¡Correcto! ' + q.explain;
+        } else {
+          b.classList.add('wrong');
+          [...container.querySelectorAll('#optsWrap .opt')].find(o=>o.textContent===q.answer).classList.add('correct');
+          fb.className = 'feedback bad';
+          fb.textContent = '✘ Casi. ' + q.explain;
+        }
+        container.querySelector('#nextBtn').style.display = 'inline-flex';
+      };
+      wrap.appendChild(b);
+    });
+  }
+  render();
+  state.maxScore += dataset.length;
+}
+
+/* ===================== RJ45 WORKSHOP ===================== */
+function setStandard(s){
+  state.standard = s;
+  document.getElementById('stdA').classList.toggle('sel', s==='A');
+  document.getElementById('stdB').classList.toggle('sel', s==='B');
+  resetRJ45();
+}
+let selectedWireKey = null;
+function renderRJ45(){
+  const slots = document.getElementById('pinSlots');
+  slots.innerHTML = '';
+  for(let i=1;i<=8;i++){
+    const s = document.createElement('div');
+    s.className = 'pin-slot' + (state.placedWires[i] ? ' filled':'');
+    s.innerHTML = `<span class="num">${i}</span>`;
+    if(state.placedWires[i]){
+      const w = document.createElement('div');
+      w.className='wire';
+      w.style.background = wireDefs[state.placedWires[i]].css;
+      s.appendChild(w);
+    }
+    s.onclick = ()=>{
+      if(state.placedWires[i]){
+        delete state.placedWires[i];
+        renderRJ45();
+        return;
+      }
+      if(selectedWireKey){
+        state.placedWires[i] = selectedWireKey;
+        selectedWireKey = null;
+        renderRJ45();
+      }
+    };
+    slots.appendChild(s);
+  }
+  const pool = document.getElementById('wirePool');
+  pool.innerHTML = '';
+  const usedKeys = Object.values(state.placedWires);
+  Object.keys(wireDefs).forEach(key=>{
+    const w = wireDefs[key];
+    const c = document.createElement('div');
+    c.className = 'chip' + (key===selectedWireKey?' sel':'') + (usedKeys.includes(key)?' used':'');
+    c.innerHTML = `<span class="swatch" style="background:${w.css}"></span>${w.label}`;
+    c.onclick = ()=>{
+      if(usedKeys.includes(key)) return;
+      selectedWireKey = (selectedWireKey===key) ? null : key;
+      renderRJ45();
+    };
+    pool.appendChild(c);
+  });
+  document.getElementById('rj45Feedback').className = 'feedback';
+}
+function resetRJ45(){
+  state.placedWires = {};
+  selectedWireKey = null;
+  document.getElementById('rj45Next').disabled = true;
+  renderRJ45();
+}
+function crimpCheck(){
+  const correctOrder = state.standard==='A' ? orderA : orderB;
+  const slots = document.querySelectorAll('.pin-slot');
+  let allCorrect = Object.keys(state.placedWires).length === 8;
+  slots.forEach((s,idx)=>{
+    const pin = idx+1;
+    const placed = state.placedWires[pin];
+    s.classList.remove('ok','bad');
+    if(!placed){ allCorrect = false; return; }
+    if(placed === correctOrder[idx]){ s.classList.add('ok'); }
+    else { s.classList.add('bad'); allCorrect = false; }
+  });
+  const fb = document.getElementById('rj45Feedback');
+  if(allCorrect){
+    fb.className = 'feedback ok';
+    fb.textContent = '🔧 ¡Crimpado con éxito! El orden coincide con ' + (state.standard==='A'?'T568A':'T568B') + '. Cable listo para usar.';
+    if(!state.rj45Done){ updateScore(4); state.rj45Done = true; state.maxScore += 4; launchConfetti(); }
+    document.getElementById('rj45Next').disabled = false;
+  } else {
+    fb.className = 'feedback bad';
+    fb.textContent = '⚠ Revisa los pines marcados en rojo o incompletos. Compara con el estándar seleccionado.';
+  }
+}
+
+/* ===================== CONFETTI ===================== */
+function launchConfetti(){
+  const holder = document.createElement('div');
+  holder.className = 'confetti';
+  document.body.appendChild(holder);
+  const colors = ['#FF7A33','#43D9A3','#4FA8FF','#C98A5B','#F4F1E8'];
+  for(let i=0;i<60;i++){
+    const s = document.createElement('span');
+    s.style.left = Math.random()*100+'vw';
+    s.style.background = colors[Math.floor(Math.random()*colors.length)];
+    s.style.animationDuration = (2+Math.random()*1.5)+'s';
+    s.style.animationDelay = (Math.random()*0.4)+'s';
+    holder.appendChild(s);
+  }
+  setTimeout(()=>holder.remove(), 3600);
+}
+
+/* ===================== FINAL ===================== */
+function renderFinal(){
+  document.getElementById('finalAvatar').textContent = state.avatar;
+  document.getElementById('finalName').textContent = state.name + ', técnico de redes en entrenamiento';
+  const pct = state.maxScore ? Math.round((state.score/state.maxScore)*100) : 0;
+  document.getElementById('finalScore').textContent = `Puntaje: ${state.score} / ${state.maxScore}  ·  ${pct}%`;
+  let badge = 'Técnico en entrenamiento';
+  if(pct>=80) badge = '🏆 Ingeniero de redes Jr.';
+  else if(pct>=50) badge = '🔧 Técnico de redes';
+  document.getElementById('finalBadge').textContent = badge;
+  launchConfetti();
+}
+function restartAll(){
+  state.score=0; state.maxScore=0; state.rj45Done=false; state.placedWires={}; state._maxReached=0;
+  document.getElementById('scoreLabel').textContent = '0 pts';
+  document.getElementById('nameInput').value='';
+  goScene(0);
+  buildDevicesTypesAB();
+}
+
+/* ===================== A vs B QUIZ MOUNT ===================== */
+function renderAB(){
+  renderQuiz('abCard', abQuiz, 6, 'Pregunta');
+}
+
+/* ===================== BOOTSTRAP ===================== */
+function buildDevicesTypesAB(){
+  renderQuiz('devicesCard', devices, 2, 'Pregunta');
+  renderQuiz('typesCard', types, 3, 'Pregunta');
+  renderQuiz('osiCard', osiQuiz, 4, 'Pregunta');
+}
+setAvatarType('humano');
+buildRail();
+buildDevicesTypesAB();
+renderOsiStack();
+renderRJ45();
+</script>
+</body>
+</html>
